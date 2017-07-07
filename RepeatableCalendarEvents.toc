@@ -13,9 +13,5 @@ locales/deDE.lua
 
 Debug.lua
 Core.lua
-Helpers.lua
-Settings.lua
-Console.lua
-RollWindow.lua
-ResultWindow.lua
-ImportExportWindow.lua
+EventsListWindow.lua
+EventWindow.lua
