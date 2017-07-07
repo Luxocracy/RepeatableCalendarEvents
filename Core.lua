@@ -8,10 +8,16 @@ RepeatableCalendarEvents = RCE
 RCE.consts = {}
 RCE.consts.ADDON_NAME = ADDON_NAME
 RCE.consts.VERSION = VERSION
+RCE.consts.CHAR_MAX_LEVEL = 110
+RCE.consts.COLORS = {
+	HIGHLIGHT = "|cFF00FFFF",
+}
+RCE.consts.ADDON_NAME_COLORED = RCE.consts.COLORS.HIGHLIGHT .. RCE.consts.ADDON_NAME .. "|r"
+
 
 function RCE:OnInitialize()
 	self.vars = {}
-	self.l = LibStub("AceLocale-3.0"):GetLocale("RollBot", false)
+	self.l = LibStub("AceLocale-3.0"):GetLocale("RepeatableCalendarEvents", false)
 	self.timers = LibStub("AceTimer-3.0")
 	self.gui = LibStub("AceGUI-3.0")
 
@@ -34,4 +40,22 @@ end
 
 function RCE:consoleParseCommand(msg, editbox)
 	log("ConsoleParseCommand", msg)
+	local cmd, nextpos = self.console:GetArgs(msg)
+
+	--self:openEventsListWindow()
+	if cmd ~= nil then
+		self:openEventWindow(tonumber(cmd))
+	else
+		self:openEventWindow(nil)
+	end
+end
+
+function RCE:printError(str, ...)
+	str = self.consts.ADDON_NAME_COLORED .. " |cFFFF0000Error:|r " .. str
+	print(str:format(...))
+end
+
+function RCE:validateEvent(event)
+	log("ValidateEvent", event)
+	return true
 end
