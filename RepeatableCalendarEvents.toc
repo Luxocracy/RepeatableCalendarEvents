@@ -1,0 +1,21 @@
+## Interface: 70200
+## Title: Repeatable Calendar Events
+## Notes: Addon to automatically create calendar events
+## Author: Neoran
+## Version: 1.0.0
+## X-Curse-Project-ID: 269026
+## SavedVariables: RepeatableCalendarEventsDB
+
+embed.xml
+
+locales/enUS.lua
+locales/deDE.lua
+
+Debug.lua
+Core.lua
+Helpers.lua
+Settings.lua
+Console.lua
+RollWindow.lua
+ResultWindow.lua
+ImportExportWindow.lua
