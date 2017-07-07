@@ -126,7 +126,7 @@ function RCE:openEventWindow(eventId)
 
 	local saveButton = self:evtWndCreateElement(frame, "Button", "SaveEventButton")
 	saveButton:SetFullWidth(true)
-	saveButton:SetCallback("OnClick", function() RCE:evtWndSave(frame, eventId); frame:Release() end)
+	saveButton:SetCallback("OnClick", function() RCE:evtWndSave(frame, eventId); frame:Release(); RCE:openEventsListWindow() end)
 
 	frame:ResumeLayout()
 	frame:DoLayout()
@@ -252,4 +252,15 @@ function RCE:evtWndSave(frame, eventId)
 	else
 		tinsert(self.db.profile.events, event)
 	end
+
+	local sortFunc = function(evt1, evt2)
+		if evt1 == nil then
+			return true
+		elseif evt2 == nil then
+			return false
+		else
+			return evt1.name < evt2.name
+		end
+	end
+	sort(self.db.profile.events, sortFunc)
 end

@@ -4,7 +4,7 @@ if not L then
 end
 
 L["EventListWindowName"]="Events"
-L["EditButtonText"]="Edit"
+L["DeleteButtonText"]="Delete"
 L["NewEventButton"]="New"
 L["EventWindowName"]="Edit event"
 L["EventName"]="Name"

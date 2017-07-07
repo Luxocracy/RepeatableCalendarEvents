@@ -42,9 +42,12 @@ function RCE:consoleParseCommand(msg, editbox)
 	log("ConsoleParseCommand", msg)
 	local cmd, nextpos = self.console:GetArgs(msg)
 
-	--self:openEventsListWindow()
 	if cmd ~= nil then
-		self:openEventWindow(tonumber(cmd))
+		if cmd == "list" then
+			self:openEventsListWindow()
+		else
+			self:openEventWindow(tonumber(cmd))
+		end
 	else
 		self:openEventWindow(nil)
 	end

@@ -11,24 +11,25 @@ function RCE:openEventsListWindow()
 	frame:SetLayout("Fill")
 	frame:EnableResize(true)
 	frame:SetTitle(L.EventListWindowName)
-	frame:PauseLayout()
 
 	local scroll = self.gui:Create("ScrollFrame")
 	scroll:SetLayout("Flow")
 	frame:AddChild(scroll)
+	scroll:PauseLayout()
 
 
 	local events = self.db.profile.events;
 	for key,event in pairs(events) do
-		local label = self.gui:Create("Label")
-		label:SetRelativeWidth(0.9)
-		label:SetText(event.name)
-		scroll:AddChild(label)
-		local button = self.gui:Create("Button")
-		button:SetText(L.EditButtonText)
-		button:SetRelativeWidth(0.1)
-		button:SetCallback("OnClick", function() RCE:openEventWindow(key); frame:Release() end)
-		scroll:AddChild(button)
+		local editButton = self.gui:Create("Button")
+		editButton:SetText(event.name)
+		editButton:SetRelativeWidth(0.8)
+		editButton:SetCallback("OnClick", function() RCE:openEventWindow(key); frame:Release() end)
+		scroll:AddChild(editButton)
+		local deleteButton = self.gui:Create("Button")
+		deleteButton:SetRelativeWidth(0.199)
+		deleteButton:SetText(L.DeleteButtonText)
+		deleteButton:SetCallback("OnClick", function() RCE.db.profile.events[key] = nil; frame:Release(); RCE:openEventsListWindow() end)
+		scroll:AddChild(deleteButton)
 	end
 
 	local newButton = self.gui:Create("Button")
@@ -37,6 +38,6 @@ function RCE:openEventsListWindow()
 	newButton:SetCallback("OnClick", function() RCE:openEventWindow(nil); frame:Release() end)
 	scroll:AddChild(newButton)
 
-	frame:ResumeLayout()
-	frame:DoLayout()
+	scroll:ResumeLayout()
+	scroll:DoLayout()
 end
