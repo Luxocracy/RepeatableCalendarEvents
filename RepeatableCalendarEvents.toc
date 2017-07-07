@@ -3,7 +3,7 @@
 ## Notes: Addon to automatically create calendar events
 ## Author: Neoran
 ## Version: 1.0.0
-## X-Curse-Project-ID: 269026
+## X-Curse-Project-ID: 271544
 ## SavedVariables: RepeatableCalendarEventsDB
 
 embed.xml
