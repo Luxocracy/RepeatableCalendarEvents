@@ -1,5 +1,32 @@
-local L = LibStub("AceLocale-3.0"):NewLocale("RollBot", "enUS", true, false)
+local L = LibStub("AceLocale-3.0"):NewLocale("RepeatableCalendarEvents", "enUS", true, false)
 if not L then
 	return
 end
 
+L["EventListWindowName"]="Events"
+L["EditButtonText"]="Edit"
+L["NewEventButton"]="New"
+L["EventWindowName"]="Edit event"
+L["EventName"]="Name"
+L["EventTitle"]="Title"
+L["EventDesc"]="Desc"
+L["SaveEventButton"]="Save"
+L["EventType"]="Type"
+L["EventTypeRaid"]="Raid"
+L["EventTypeDungeon"]="Dungeon"
+L["EventTypePvP"]="PvP"
+L["EventTypeMeeting"]="Meeting"
+L["EventTypeOther"]="Other"
+L["EventHour"]="Hour"
+L["EventMinute"]="Minute"
+L["EventRaidOrDungeon"]="Raid/Dungeon"
+L["EventDifficulty"]="Difficulty"
+L["EventDay"]="Day"
+L["EventMonth"]="Month"
+L["EventYear"]="Year"
+L["EventLocked"]="Locked"
+L["EventTypeGuild"]="Guild event"
+L["EventCustomGuildInvite"]="Custom guild invite"
+L["EventGuildInvMinLevel"]="Min level"
+L["EventGuildInvMaxLevel"]="Max level"
+L["EventGuildInvRank"]="Rank"
