@@ -91,11 +91,18 @@ local function buildCache(...)
 	return sortedResult
 end
 
+function RCE:buildCaches()
+	if self.vars.raidCache == nil then
+		self.vars.raidCache = buildCache(CalendarEventGetTextures(self.consts.EVENT_TYPES.RAID))
+	end
+	if self.vars.dungeonCache == nil then
+		self.vars.dungeonCache = buildCache(CalendarEventGetTextures(self.consts.EVENT_TYPES.DUNGEON))
+	end
+end
+
 function RCE:OnInitialize()
 	self.vars = {
-		raidCache = buildCache(CalendarEventGetTextures(self.consts.EVENT_TYPES.RAID)),
-		dungeonCache = buildCache(CalendarEventGetTextures(self.consts.EVENT_TYPES.DUNGEON)),
-	}
+		}
 	self.l = LibStub("AceLocale-3.0"):GetLocale("RepeatableCalendarEvents", false)
 	self.gui = LibStub("AceGUI-3.0")
 	self.timers = LibStub("AceTimer-3.0")
@@ -150,6 +157,7 @@ function RCE:printError(str, ...)
 end
 
 function RCE:getCacheForEventType(eventType)
+	self:buildCaches()
 	if eventType == 1 then
 		return self.vars.raidCache
 	elseif eventType == 2 then
