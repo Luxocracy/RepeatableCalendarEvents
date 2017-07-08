@@ -44,7 +44,6 @@ function RCE:createWoWEvent(event)
 	CalendarEventSetTitle(event.title)
 	CalendarEventSetDescription(event.desc)
 	CalendarEventSetType(event.type)
-	-- TODO Set raid/dungeon and difficulty
 	CalendarEventSetTime(event.hour, event.minute)
 	CalendarEventSetDate(event.month, event.day, event.year)
 	if event.locked then
