@@ -132,17 +132,15 @@ function RCE:consoleParseCommand(msg, editbox)
 	local cmd, nextpos = self.console:GetArgs(msg)
 
 	if cmd ~= nil then
-		if cmd == "list" then
-			self:openEventsListWindow()
-		elseif cmd == "confirm" then
-			self:openConfirmWindow()
-		elseif cmd == "check" then
+		if cmd == "check" then
 			self:scheduleRepeatCheck(1)
+		elseif cmd == "new" then
+			self:openEventWindow()
 		else
-			self:openEventWindow(tonumber(cmd))
+			self:openEventsListWindow()
 		end
 	else
-		self:openEventWindow(nil)
+		self:openEventsListWindow()
 	end
 end
 
