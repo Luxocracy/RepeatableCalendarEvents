@@ -1,6 +1,5 @@
 
 -- TODO:
--- - Raid/Dungeon and Difficulty
 -- - AutoMod für Events
 -- - Custom-Einlade-Listen für Events (Gilde und nicht-Gilde)
 
@@ -32,9 +31,71 @@ RCE.consts.REPEAT_TYPES = {
 RCE.consts.ADDON_NAME_COLORED = RCE.consts.COLORS.HIGHLIGHT .. RCE.consts.ADDON_NAME .. "|r"
 RCE.consts.REPEAT_CHECK_INTERVAL = 60
 
+local function buildCache(...)
+	local sortDifficulties = function(a,b)
+		return a.difficulty < b.difficulty
+	end
+	local sortEntries = function(a,b)
+		if a.expansion ~= b.expansion then
+			return a.expansion > b.expansion
+		end
+		return a.texture > b.texture
+	end
+	local LIST_ELEMENTS_PER_ENTRY = 6
+	local result = {}
+	local listSize = select("#", ...)
+	if mod(listSize, LIST_ELEMENTS_PER_ENTRY) ~= 0 then
+		error("List is not dividiable by 6. Code must be changed " .. listSize)
+	end
+
+	for i=1,listSize/LIST_ELEMENTS_PER_ENTRY do
+		local title, texture, expansion, difficultyId, mapId, isLFR = select((i - 1) * LIST_ELEMENTS_PER_ENTRY + 1, ...)
+
+		local difficultyName, _, _, _, isHeroic, isMythic = GetDifficultyInfo(difficultyId)
+		if result[mapId] == nil or
+			(result[mapId].isLFR and not isLFR) or
+			((result[mapId].isHeroic or result[mapId].isMythic) and not (isHeroic or isMythic)) then
+			local difficulties = {}
+			if result[mapId] ~= nil then
+				difficulties = result[mapId].difficulties
+			end
+			difficulties[difficultyId] = { difficulty = difficultyId, index = i, name = difficultyName}
+
+			result[mapId] = {
+				title = title,
+				expansion = expansion,
+				expansionName = _G["EXPANSION_NAME" .. expansion],
+				isLFR = isLFR,
+				isHeroic = isHeroic,
+				isMythic = isMythic,
+				texture = texture,
+				difficulties = difficulties,
+			}
+		else
+			result[mapId].difficulties[difficultyId] = { difficulty = difficultyId, index = i, name = difficultyName }
+		end
+	end
+
+	local sortedResult = {}
+	-- By purpose we drop the mapid-information and difficulty-id-key here. We dont need them any longer and they prevent sorting
+	for _,v in pairs(result) do
+		local difficulties = v.difficulties
+		v.difficulties = {}
+		for _,v2 in pairs(difficulties) do
+			tinsert(v.difficulties, v2)
+		end
+		sort(v.difficulties, sortDifficulties)
+		tinsert(sortedResult, v)
+	end
+	sort(sortedResult, sortEntries)
+	return sortedResult
+end
 
 function RCE:OnInitialize()
-	self.vars = {}
+	self.vars = {
+		raidCache = buildCache(CalendarEventGetTextures(self.consts.EVENT_TYPES.RAID)),
+		dungeonCache = buildCache(CalendarEventGetTextures(self.consts.EVENT_TYPES.DUNGEON)),
+	}
 	self.l = LibStub("AceLocale-3.0"):GetLocale("RepeatableCalendarEvents", false)
 	self.gui = LibStub("AceGUI-3.0")
 	self.timers = LibStub("AceTimer-3.0")
@@ -90,6 +151,16 @@ function RCE:printError(str, ...)
 	print(str:format(...))
 end
 
+function RCE:getCacheForEventType(eventType)
+	if eventType == 1 then
+		return self.vars.raidCache
+	elseif eventType == 2 then
+		return self.vars.dungeonCache
+	else
+		return nil
+	end
+end
+
 function RCE:validateEvent(event)
 	log("ValidateEvent", event)
 	local empty = function(param)
@@ -110,11 +181,12 @@ function RCE:validateEvent(event)
 		return false
 	end
 	if (event.type==self.consts.EVENT_TYPES.RAID or event.type==self.consts.EVENT_TYPES.DUNGEON) then
-		if empty(event.raidOrDungeon) then
+		local cache = self:getCacheForEventType(event.type)
+		if empty(event.raidOrDungeon) or event.raidOrDungeon <= 0 or event.raidOrDungeon > #cache then
 			self:printError(L.ErrorNoRaidOrDungeonChoosen)
 			return false
 		end
-		if empty(event.difficulty) then
+		if empty(event.difficulty) or event.difficulty <= 0 or event.difficulty > #cache[event.raidOrDungeon].difficulties then
 			self:printError(L.ErrorNoDifficultyChoosen)
 			return false
 		end

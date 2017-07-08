@@ -2,6 +2,26 @@
 local log = RepeatableCalendarEventsDebug.log
 local RCE = RepeatableCalendarEvents
 
+local function buildRaidOrDungeonDropdownList(cache)
+	local ret = {}
+	for i=1,#cache do
+		ret[i] = cache[i].expansionName .. " - " .. cache[i].title
+	end
+
+	return ret
+end
+
+local function builDifficultyDropdownList(cache, index)
+	local ret = {}
+	local difficulties = cache[index].difficulties
+
+	for i=1,#difficulties do
+		ret[i] = difficulties[i].name
+	end
+
+	return ret
+end
+
 local function constructDefaultEvent()
 	local ret = {
 		name = "",
@@ -65,8 +85,6 @@ function RCE:openEventWindow(eventId)
 	type:SetValue(event.type)
 
 	local raidOrDungeon = self:evtWndCreateElement(frame, "Dropdown", "EventRaidOrDungeon")
-	local raidsAndDungeons = { "TOC", "Seelenschlund" }
-	raidOrDungeon:SetList(raidsAndDungeons)
 	raidOrDungeon:SetRelativeWidth(0.5)
 	raidOrDungeon:SetValue(event.raidOrDungeon)
 
@@ -148,6 +166,7 @@ function RCE:openEventWindow(eventId)
 	frame:DoLayout()
 
 	self:evtWndRegisterForChangeToCheckOtherFields(frame, type, "Dropdown")
+	self:evtWndRegisterForChangeToCheckOtherFields(frame, raidOrDungeon, "Dropdown")
 	self:evtWndRegisterForChangeToCheckOtherFields(frame, guildEvent, "CheckBox")
 	self:evtWndRegisterForChangeToCheckOtherFields(frame, customGuildInvite, "CheckBox")
 	self:evtWndCheckFields(frame)
@@ -195,9 +214,17 @@ end
 
 function RCE:evtWndCheckFields(frame)
 	local childs = frame:GetUserData("Childs")
-	if childs.EventType:GetValue() == 1 or childs.EventType:GetValue() == 2 then
+	if childs.EventType:GetValue() == self.consts.EVENT_TYPES.RAID or childs.EventType:GetValue() == self.consts.EVENT_TYPES.DUNGEON then
 		childs.EventRaidOrDungeon:SetDisabled(false)
 		childs.EventDifficulty:SetDisabled(false)
+
+		local cache = self:getCacheForEventType(childs.EventType:GetValue())
+		local oldValue = childs.EventRaidOrDungeon:GetValue()
+		childs.EventRaidOrDungeon:SetList(buildRaidOrDungeonDropdownList(cache))
+		childs.EventRaidOrDungeon:SetValue(oldValue)
+		oldValue = childs.EventDifficulty:GetValue()
+		childs.EventDifficulty:SetList(builDifficultyDropdownList(cache, childs.EventRaidOrDungeon:GetValue()))
+		childs.EventDifficulty:SetValue(oldValue)
 	else
 		childs.EventRaidOrDungeon:SetDisabled(true)
 		childs.EventDifficulty:SetDisabled(true)

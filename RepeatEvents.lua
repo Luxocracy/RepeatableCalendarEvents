@@ -53,6 +53,10 @@ function RCE:createWoWEvent(event)
 	if not event.guildEvent and event.customGuildInvite and IsInGuild() then
 		CalendarMassInviteGuild(event.guildInvMinLevel, event.guildInvMaxLevel, event.guildInvRank)
 	end
+
+	local cache = self:getCacheForEventType(event.type)
+	local textureId = cache[event.raidOrDungeon].difficulties[event.difficulty].index
+	CalendarEventSetTextureID(textureId)
 end
 
 function RCE:repeatEvent()
