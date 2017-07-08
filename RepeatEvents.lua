@@ -67,7 +67,7 @@ function RCE:repeatEvent()
 	for key,event in pairs(self.db.profile.events) do
 		local dateTable = self:timeTableFromEvent(event)
 		local eventTime = time(dateTable)
-		log("RepeatEvent Check", event.name, date("%c", eventTime), event)
+		log("RepeatEvent Check", event.name, date("%c", eventTime))
 
 		while eventTime < currentTime do
 			-- increase eventTime until it reaches today
@@ -110,7 +110,7 @@ function RCE:repeatEvent()
 		end
 		-- Finally save the dateTable to the event, so that the next checks ignore already created events
 		dateTableToEvent(dateTable, event)
-		log("RepeatEvent NextDate", event.name, date("%c", eventTime), event)
+		log("RepeatEvent NextDate", event.name, date("%c", eventTime))
 	end
 	CalendarSetMonth(0)
 	self.console:Printf("%s: %s", self.consts.ADDON_NAME_COLORED, self.l.CalendarUpdateFinished)
