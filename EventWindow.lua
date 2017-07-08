@@ -15,12 +15,13 @@ local function constructDefaultEvent()
 		day = 1,
 		month = 1,
 		year = 1999,
+		repeatType = 1,
 		locked = false,
 		guildEvent = false,
 		customGuildInvite = false,
 		guildInvMinLevel = 1,
 		guildInvMaxLevel = RCE.consts.CHAR_MAX_LEVEL,
-		guildInvRank = 0,
+		guildInvRank = 1,
 	}
 
 	return ret
@@ -109,6 +110,16 @@ function RCE:openEventWindow(eventId)
 	year:SetWidth(100)
 	year:DisableButton(true)
 
+	local repeatType = self:evtWndCreateElement(frame, "Dropdown", "EventRepeatType")
+	local repeatTypes = {
+		[self.consts.REPEAT_TYPES.WEEKLY] = self.l.EventRepeatWeekly,
+		[self.consts.REPEAT_TYPES.MONTHLY] = self.l.EventRepeatMonthly,
+		[self.consts.REPEAT_TYPES.YEARLY] = self.l.EventRepeatYearly,
+	}
+	repeatType:SetList(repeatTypes)
+	repeatType:SetWidth(100)
+	repeatType:SetValue(event.repeatType)
+
 	local locked = self:evtWndCreateElement(frame, "CheckBox", "EventLocked", event.locked)
 
 	local guildEvent = self:evtWndCreateElement(frame, "CheckBox", "EventTypeGuild", event.guildEvent)
@@ -122,11 +133,16 @@ function RCE:openEventWindow(eventId)
 	guildInvMaxLevel:SetSliderValues(1, self.consts.CHAR_MAX_LEVEL, 1)
 
 	local guildInvRank = self:evtWndCreateElement(frame, "Slider", "EventGuildInvRank", event.guildInvRank)
-	guildInvRank:SetSliderValues(0, GuildControlGetNumRanks(), 1)
+	guildInvRank:SetSliderValues(1, IsInGuild() and GuildControlGetNumRanks() or 1, 1)
 
 	local saveButton = self:evtWndCreateElement(frame, "Button", "SaveEventButton")
 	saveButton:SetFullWidth(true)
-	saveButton:SetCallback("OnClick", function() RCE:evtWndSave(frame, eventId); frame:Release(); RCE:openEventsListWindow() end)
+	saveButton:SetCallback("OnClick", function()
+		if RCE:evtWndSave(frame, eventId) then
+			frame:Release()
+			RCE:openEventsListWindow()
+		end
+	end)
 
 	frame:ResumeLayout()
 	frame:DoLayout()
@@ -158,7 +174,6 @@ function RCE:evtWndCreateElement(frame, type, name, value)
 		element:SetText(value)
 	elseif type == "CheckBox" or type =="Slider" then
 		checkValue()
-		log("1", type, name, value)
 		element:SetValue(value)
 	elseif type == "Button" or type == "Dropdown" then
 	-- Do nothing for buttons and cant set for dropdowns before options are set
@@ -188,13 +203,19 @@ function RCE:evtWndCheckFields(frame)
 		childs.EventDifficulty:SetDisabled(true)
 	end
 
-	if childs.EventTypeGuild:GetValue() then
-		childs.EventCustomGuildInvite:SetDisabled(true)
+	if IsInGuild() then
+		childs.EventTypeGuild:SetDisabled(false)
 	else
-		childs.EventCustomGuildInvite:SetDisabled(false)
+		childs.EventTypeGuild:SetDisabled(true)
 	end
 
-	if childs.EventCustomGuildInvite:GetValue() and not childs.EventTypeGuild:GetValue() then
+	if not childs.EventTypeGuild:GetValue() and IsInGuild() then
+		childs.EventCustomGuildInvite:SetDisabled(false)
+	else
+		childs.EventCustomGuildInvite:SetDisabled(true)
+	end
+
+	if childs.EventCustomGuildInvite:GetValue() and not childs.EventTypeGuild:GetValue() and IsInGuild() then
 		childs.EventGuildInvMinLevel:SetDisabled(false)
 		childs.EventGuildInvMaxLevel:SetDisabled(false)
 		childs.EventGuildInvRank:SetDisabled(false)
@@ -230,11 +251,12 @@ function RCE:evtWndSave(frame, eventId)
 	event.type = childs.EventType:GetValue()
 	event.raidOrDungeon = childs.EventRaidOrDungeon:GetValue()
 	event.difficulty = childs.EventDifficulty:GetValue()
-	event.hour = childs.EventHour:GetValue()
-	event.minute = childs.EventMinute:GetValue()
+	event.hour = tonumber(childs.EventHour:GetValue())
+	event.minute = tonumber(childs.EventMinute:GetValue())
 	event.day = tonumber(childs.EventDay:GetText())
 	event.month = tonumber(childs.EventMonth:GetText())
 	event.year = tonumber(childs.EventYear:GetText())
+	event.repeatType = tonumber(childs.EventRepeatType:GetValue())
 	event.locked = childs.EventLocked:GetValue() and true or false
 	event.guildEvent = childs.EventTypeGuild:GetValue() and true or false
 	event.customGuildInvite = childs.EventCustomGuildInvite:GetValue() and true or false
@@ -243,7 +265,7 @@ function RCE:evtWndSave(frame, eventId)
 	event.guildInvRank = tonumber(childs.EventGuildInvRank:GetValue())
 
 	if not self:validateEvent(event) then
-		return
+		return false
 	end
 
 	log("EvtWndSave Saving: ", eventId, event)
@@ -255,12 +277,14 @@ function RCE:evtWndSave(frame, eventId)
 
 	local sortFunc = function(evt1, evt2)
 		if evt1 == nil then
-			return true
-		elseif evt2 == nil then
 			return false
+		elseif evt2 == nil then
+			return true
 		else
-			return evt1.name < evt2.name
+			return strcmputf8i(tostring(evt1.name),tostring(evt2.name)) < 0
 		end
 	end
 	sort(self.db.profile.events, sortFunc)
+	self:scheduleRepeatCheck(1)
+	return true
 end

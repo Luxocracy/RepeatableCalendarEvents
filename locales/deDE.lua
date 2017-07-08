@@ -3,3 +3,4 @@ if not L then
 	return
 end
 
+L["DateFormat"]="%d.%m.%Y %H:%M"

@@ -13,5 +13,7 @@ locales/deDE.lua
 
 Debug.lua
 Core.lua
+RepeatEvents.lua
 EventsListWindow.lua
 EventWindow.lua
+ConfirmWindow.lua
