@@ -28,8 +28,9 @@ RCE.consts.REPEAT_TYPES = {
 	MONTHLY = 2,
 	YEARLY = 3,
 }
+RCE.consts.WAIT_FOR_PLAYER_ALIVE = 60
+RCE.consts.REPEAT_CHECK_INTERVAL = 11
 RCE.consts.ADDON_NAME_COLORED = RCE.consts.COLORS.HIGHLIGHT .. RCE.consts.ADDON_NAME .. "|r"
-RCE.consts.REPEAT_CHECK_INTERVAL = 60
 
 local function buildCache(...)
 	local sortDifficulties = function(a,b)
@@ -112,16 +113,23 @@ function RCE:OnInitialize()
 	self:createOptions()
 
 	LibStub("AceEvent-3.0"):Embed(self) -- Have to embed, UnregisterEvent doesnt work otherwise
+	-- On login, ask for calendar at PlayerAlive
 	self:RegisterEvent("PLAYER_ALIVE", function()
 		log("PLAYER_ALIVE")
-		RCE:UnregisterEvent("PLAYER_ALIVE")
-		RCE:RegisterEvent("CALENDAR_UPDATE_EVENT_LIST", function()
-			log("CALENDAR_UPDATE_EVENT_LIST")
-			RCE:UnregisterEvent("CALENDAR_UPDATE_EVENT_LIST")
-			RCE:scheduleRepeatCheck()
-		end)
 		OpenCalendar()
+		RCE:UnregisterEvent("PLAYER_ALIVE")
 	end)
+	self.timers:ScheduleTimer(function()
+		log("Wait for PLAYER_ALIVE expired, assume this is a reload")
+		RCE:UnregisterEvent("CALENDAR_UPDATE_EVENT_LIST")
+		RCE:UnregisterEvent("PLAYER_ALIVE")
+	end, self.consts.WAIT_FOR_PLAYER_ALIVE)
+	self:RegisterEvent("CALENDAR_UPDATE_EVENT_LIST", function()
+		log("CALENDAR_UPDATE_EVENT_LIST")
+		RCE:UnregisterEvent("CALENDAR_UPDATE_EVENT_LIST")
+		RCE:scheduleRepeatCheck()
+	end)
+
 
 	self.console = LibStub("AceConsole-3.0")
 	local consoleCommandFunc = function(msg, editbox)
@@ -138,6 +146,7 @@ function RCE:consoleParseCommand(msg, editbox)
 
 	if cmd ~= nil then
 		if cmd == "check" then
+			OpenCalendar() -- Normaly we have to wait for the event to return. But this command is a test-only command anyway
 			self:scheduleRepeatCheck(1)
 		elseif cmd == "new" then
 			self:openEventWindow()

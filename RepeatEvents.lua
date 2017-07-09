@@ -54,8 +54,10 @@ function RCE:createWoWEvent(event)
 	end
 
 	local cache = self:getCacheForEventType(event.type)
-	local textureId = cache[event.raidOrDungeon].difficulties[event.difficulty].index
-	CalendarEventSetTextureID(textureId)
+	if cache ~= nil then
+		local textureId = cache[event.raidOrDungeon].difficulties[event.difficulty].index
+		CalendarEventSetTextureID(textureId)
+	end
 end
 
 function RCE:repeatEvent()
@@ -63,7 +65,6 @@ function RCE:repeatEvent()
 
 	local currentTime = time()
 	local maxCreateTime = time() + self.db.profile.eventsInFuture * 86400
-	local currentMonth, currentYear = CalendarGetMonth(0)
 	for key,event in pairs(self.db.profile.events) do
 		local dateTable = self:timeTableFromEvent(event)
 		local eventTime = time(dateTable)
@@ -78,15 +79,24 @@ function RCE:repeatEvent()
 		while eventTime < maxCreateTime do
 			log("RepeatEvent CheckFor", event.name, date("%c", eventTime))
 			dateTable = normalizeDateTable(dateTable)
-			local monthOffset = dateTable.month - currentMonth + (dateTable.year - currentYear) * 12
-			assert(monthOffset >= 0, "MonthOffset " .. monthOffset)
+			local currentCalendarMonth, currentCalendarYear = CalendarGetMonth(0)
+			-- monthOffset (in blizzard speak) referes to the current selected month!
+			-- So CalendarSetMonth(0) doesnt move the calendar
+			local monthOffset = dateTable.month - currentCalendarMonth + (dateTable.year - currentCalendarYear) * 12
 			CalendarSetMonth(monthOffset)
+			do
+				-- Check if CalendarSetMonth went well
+				local currentCalendarMonth, currentCalendarYear = CalendarGetMonth(0)
+				assert(currentCalendarMonth == dateTable.month, "Month mismatch " .. currentCalendarMonth .. " " .. dateTable.month)
+				assert(currentCalendarYear == dateTable.year, "Year mismatch " .. currentCalendarYear .. " " .. dateTable.year)
+			end
+
 
 			-- Loop through events of that day to see if event already exists
-			local numEvents = CalendarGetNumDayEvents(monthOffset, dateTable.day)
+			local numEvents = CalendarGetNumDayEvents(0, dateTable.day)
 			local foundEvent = false
 			for i=1,numEvents do
-				local title,_,_,calendarType = CalendarGetDayEvent(monthOffset, dateTable.day, i)
+				local title,_,_,calendarType = CalendarGetDayEvent(0, dateTable.day, i)
 				if (calendarType == "GUILD_EVENT" or calendarType == "PLAYER") and title == event.title then
 					log("RepeatEvent Found", event.name, date("%c", eventTime))
 					foundEvent = true
@@ -112,6 +122,5 @@ function RCE:repeatEvent()
 		dateTableToEvent(dateTable, event)
 		log("RepeatEvent NextDate", event.name, date("%c", eventTime))
 	end
-	CalendarSetMonth(0)
 	self.console:Printf("%s: %s", self.consts.ADDON_NAME_COLORED, self.l.CalendarUpdateFinished)
 end
