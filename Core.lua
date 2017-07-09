@@ -109,9 +109,7 @@ function RCE:OnInitialize()
 
 	local defaultDb = { profile = { events = {}, eventsInFuture = 15, }}
 	self.db = LibStub("AceDB-3.0"):New(ADDON_NAME .. "DB", defaultDb)
-	local optionsTable = { name = self.consts.ADDON_NAME, type = "group", args = { profile = LibStub("AceDBOptions-3.0"):GetOptionsTable(self.db) }}
-	LibStub("AceConfig-3.0"):RegisterOptionsTable(ADDON_NAME, optionsTable)
-	LibStub("AceConfigDialog-3.0"):AddToBlizOptions(ADDON_NAME)
+	self:createOptions()
 
 	LibStub("AceEvent-3.0"):Embed(self) -- Have to embed, UnregisterEvent doesnt work otherwise
 	self:RegisterEvent("PLAYER_ALIVE", function()
