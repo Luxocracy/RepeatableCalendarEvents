@@ -1,9 +1,7 @@
 
-local IS_DEBUG = false
---@alpha@
-IS_DEBUG = true
---@end-alpha@
-RepeatableCalendarEventsDebug = {}
+FH3095Debug = {
+	logFrame = nil,
+}
 
 local function objToString(obj)
 	if type(obj) == "table" then
@@ -22,8 +20,8 @@ local function objToString(obj)
 	end
 end
 
-function RepeatableCalendarEventsDebug.log(str, ...)
-	if not IS_DEBUG then
+function FH3095Debug.log(str, ...)
+	if FH3095Debug.logFrame == nil then
 		return
 	end
 	str = str .. ": "
@@ -31,5 +29,16 @@ function RepeatableCalendarEventsDebug.log(str, ...)
 		local val = select(i ,...)
 		str = str .. objToString(val) .. " ; "
 	end
-	print(str)
+
+	FH3095Debug.logFrame:AddMessage(str)
+end
+
+function FH3095Debug.onInit()
+	for i=1,NUM_CHAT_WINDOWS do
+		local frameName = GetChatWindowInfo(i)
+		if frameName == "Debug" then
+			FH3095Debug.logFrame = _G["ChatFrame" .. i]
+			return
+		end
+	end
 end

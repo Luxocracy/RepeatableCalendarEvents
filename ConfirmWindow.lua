@@ -1,5 +1,5 @@
 
-local log = RepeatableCalendarEventsDebug.log
+local log = FH3095Debug.log
 local RCE = RepeatableCalendarEvents
 
 function RCE:openConfirmWindow()

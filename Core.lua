@@ -5,7 +5,7 @@
 
 local ADDON_NAME = "RepeatableCalendarEvents"
 local VERSION = "@project-version@"
-local log = RepeatableCalendarEventsDebug.log
+local log = FH3095Debug.log
 local RCE = LibStub("AceAddon-3.0"):NewAddon(ADDON_NAME)
 RepeatableCalendarEvents = RCE
 
@@ -102,8 +102,8 @@ function RCE:buildCaches()
 end
 
 function RCE:OnInitialize()
-	self.vars = {
-		}
+	self.vars = {}
+	FH3095Debug.onInit()
 	self.l = LibStub("AceLocale-3.0"):GetLocale("RepeatableCalendarEvents", false)
 	self.gui = LibStub("AceGUI-3.0")
 	self.timers = LibStub("AceTimer-3.0")
