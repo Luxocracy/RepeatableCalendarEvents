@@ -103,7 +103,7 @@ end
 
 function RCE:OnInitialize()
 	self.vars = {}
-	FH3095Debug.onInit()
+	--FH3095Debug.onInit()
 	self.l = LibStub("AceLocale-3.0"):GetLocale("RepeatableCalendarEvents", false)
 	self.gui = LibStub("AceGUI-3.0")
 	self.timers = LibStub("AceTimer-3.0")
@@ -138,6 +138,10 @@ function RCE:OnInitialize()
 	self.console:RegisterChatCommand("RCE", consoleCommandFunc, true)
 	self.console:RegisterChatCommand("RepeatableCalendarEvents", consoleCommandFunc, true)
 
+end
+
+function RCE:OnEnable()
+	FH3095Debug.onEnable()
 end
 
 function RCE:consoleParseCommand(msg, editbox)
