@@ -23,18 +23,6 @@ local function dateTableToEvent(dateTable, event)
 	event.minute = dateTable.min
 end
 
-local function normalizeDateTable(dateTable)
-	dateTable = date("*t", time(dateTable))
-	local ret = {}
-	ret.year = dateTable.year
-	ret.month = dateTable.month
-	ret.day = dateTable.day
-	ret.hour = dateTable.hour
-	ret.min = dateTable.min
-
-	return ret
-end
-
 function RCE:createWoWEvent(event)
 	if event.guildEvent and IsInGuild() then
 		CalendarNewGuildEvent()
@@ -78,19 +66,8 @@ function RCE:repeatEvent()
 
 		while eventTime < maxCreateTime do
 			log("RepeatEvent CheckFor", event.name, date("%c", eventTime))
-			dateTable = normalizeDateTable(dateTable)
-			local currentCalendarMonth, currentCalendarYear = CalendarGetMonth(0)
-			-- monthOffset (in blizzard speak) referes to the current selected month!
-			-- So CalendarSetMonth(0) doesnt move the calendar
-			local monthOffset = dateTable.month - currentCalendarMonth + (dateTable.year - currentCalendarYear) * 12
-			CalendarSetMonth(monthOffset)
-			do
-				-- Check if CalendarSetMonth went well
-				local currentCalendarMonth, currentCalendarYear = CalendarGetMonth(0)
-				assert(currentCalendarMonth == dateTable.month, "Month mismatch " .. currentCalendarMonth .. " " .. dateTable.month)
-				assert(currentCalendarYear == dateTable.year, "Year mismatch " .. currentCalendarYear .. " " .. dateTable.year)
-			end
-
+			dateTable = self:normalizeDateTable(dateTable)
+			self:setCalendarMonthToDate(dateTable)
 
 			-- Loop through events of that day to see if event already exists
 			local numEvents = CalendarGetNumDayEvents(0, dateTable.day)
@@ -122,5 +99,5 @@ function RCE:repeatEvent()
 		dateTableToEvent(dateTable, event)
 		log("RepeatEvent NextDate", event.name, date("%c", eventTime))
 	end
-	self.console:Printf("%s: %s", self.consts.ADDON_NAME_COLORED, self.l.CalendarUpdateFinished)
+	self:scheduleAutoModCheck()
 end

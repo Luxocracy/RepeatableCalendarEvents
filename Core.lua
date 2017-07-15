@@ -108,7 +108,7 @@ function RCE:OnInitialize()
 	self.gui = LibStub("AceGUI-3.0")
 	self.timers = LibStub("AceTimer-3.0")
 
-	local defaultDb = { profile = { events = {}, eventsInFuture = 15, }}
+	local defaultDb = { profile = { events = {}, eventsInFuture = 15, autoModNames = "", }}
 	self.db = LibStub("AceDB-3.0"):New(ADDON_NAME .. "DB", defaultDb)
 	self:createOptions()
 
@@ -260,4 +260,24 @@ function RCE:scheduleRepeatCheck(secondsToCheck)
 	log("ScheduleRepeatCheck", seconds)
 
 	self.vars.repeatCheckTimer = self.timers:ScheduleTimer(function() RCE:repeatEvent() end, seconds)
+end
+
+function RCE:setCalendarMonthToDate(dateTable)
+	CalendarSetAbsMonth(dateTable.month, dateTable.year)
+	-- assert that CalendarSetMonth worked
+	currentCalendarMonth, currentCalendarYear = CalendarGetMonth(0)
+	assert(currentCalendarMonth == dateTable.month, "Month mismatch " .. currentCalendarMonth .. " <> " .. dateTable.month)
+	assert(currentCalendarYear == dateTable.year, "Year mismatch " .. currentCalendarYear .. " <> " .. dateTable.year)
+end
+
+function RCE:normalizeDateTable(dateTable)
+	dateTable = date("*t", time(dateTable))
+	local ret = {}
+	ret.year = dateTable.year
+	ret.month = dateTable.month
+	ret.day = dateTable.day
+	ret.hour = dateTable.hour
+	ret.min = dateTable.min
+
+	return ret
 end

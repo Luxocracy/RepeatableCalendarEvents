@@ -15,6 +15,7 @@ Debug.lua
 Core.lua
 RepeatEvents.lua
 Settings.lua
+AutoMod.lua
 EventsListWindow.lua
 EventWindow.lua
 ConfirmWindow.lua

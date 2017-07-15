@@ -17,12 +17,18 @@ function RCE:createOptions()
 					eventsInFuture = {
 						type	= "range",
 						name	= self.l.EventsInFutureName,
-						desc	= self.l.eventsInFutureDesc,
+						desc	= self.l.EventsInFutureDesc,
 						min		= 1,
 						max		= 365,
 						softMax	= 32,
 						step	= 1,
 					},
+					autoModNames = {
+						type = "input",
+						name = self.l.AutoModNamesName,
+						multiline = true,
+						width = "full",
+					}
 				}
 			},
 			profile = LibStub("AceDBOptions-3.0"):GetOptionsTable(self.db),
