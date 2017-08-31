@@ -20,6 +20,7 @@ function RCE:checkAutoMod()
 	local dateTable = date("*t")
 	local events = {}
 	local realmName = GetRealmName()
+	local currentEvent = nil
 
 	for futureDays=1,self.db.profile.eventsInFuture do
 		self:setCalendarMonthToDate(dateTable)
@@ -46,19 +47,24 @@ function RCE:checkAutoMod()
 		-- Also cant call CalendarCloseEvent while "CALENDAR_OPEN_EVENT" is running
 		CalendarCloseEvent()
 
-		local newEvent = tremove(events)
-		if newEvent == nil then
+		currentEvent = tremove(events)
+		if currentEvent == nil then
 			self:UnregisterEvent("CALENDAR_OPEN_EVENT")
 			self.console:Printf("%s: %s", self.consts.ADDON_NAME_COLORED, self.l.CalendarUpdateFinished)
 			return
 		end
-		CalendarSetAbsMonth(newEvent.month, newEvent.year)
-		log("CheckAutoMod: Enqueue Event", newEvent.day, newEvent.index)
+		CalendarSetAbsMonth(currentEvent.month, currentEvent.year)
+		log("CheckAutoMod: Enqueue Event", currentEvent.day, currentEvent.index)
 		-- Dont even expect to be able to run CalendarOpenEvent while "CALENDAR_OPEN_EVENT" is running
-		CalendarOpenEvent(0, newEvent.day, newEvent.index)
+		CalendarOpenEvent(0, currentEvent.day, currentEvent.index)
 	end
 
 	local function parseEvent()
+		if currentEvent == nil then
+			return
+		end
+		log("CALENDAR_OPEN_EVENT")
+		currentEvent = nil -- Have to reset currentEvent, because CALENDAR_OPEN_EVENT sometimes fires twice...
 		local toMod = {}
 		if CalendarEventCanEdit() then
 			local title, _, _, _, _, _, _, _, month, day, year, hour, minute = CalendarGetEventInfo()
