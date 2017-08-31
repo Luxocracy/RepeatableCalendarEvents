@@ -20,5 +20,5 @@ function RCE:openConfirmWindow()
 	end)
 	frame:AddChild(button)
 
-	PlaySound("ReadyCheck")
+	PlaySound(SOUNDKIT.READY_CHECK)
 end
