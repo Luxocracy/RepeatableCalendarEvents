@@ -111,7 +111,7 @@ function RCE:OnInitialize()
 	self.gui = LibStub("AceGUI-3.0")
 	self.timers = LibStub("AceTimer-3.0")
 
-	local defaultDb = { profile = { events = {}, eventsInFuture = 30, autoModNames = "", }}
+	local defaultDb = { profile = { events = {}, eventsInFuture = 15, autoModNames = "", }}
 	self.db = LibStub("AceDB-3.0"):New(ADDON_NAME .. "DB", defaultDb)
 	self:createOptions()
 
