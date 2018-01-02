@@ -38,6 +38,15 @@ function RCE:openEventsListWindow()
 	newButton:SetCallback("OnClick", function() RCE:openEventWindow(nil); frame:Release() end)
 	scroll:AddChild(newButton)
 
+	local maxInFuture = self.gui:Create("EditBox")
+	maxInFuture:SetLabel('Future Event Limit')
+	maxInFuture:SetText(RCE.db.profile.eventsInFuture)
+	maxInFuture:SetWidth(100)
+	maxInFuture:SetCallback("OnTextChanged", function(self, userInput)
+		RCE.db.profile.eventsInFuture = tonumber(self:GetText())
+	end)
+	scroll:AddChild(maxInFuture)
+
 	scroll:ResumeLayout()
 	scroll:DoLayout()
 end

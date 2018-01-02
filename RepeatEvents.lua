@@ -5,6 +5,12 @@ local RCE = RepeatableCalendarEvents
 function RCE:increaseDate(repeatType, dateTable)
 	if repeatType == self.consts.REPEAT_TYPES.WEEKLY then
 		dateTable.day = dateTable.day + 7
+	elseif repeatType == self.consts.REPEAT_TYPES.WEEKLY2 then
+		dateTable.day = dateTable.day + 14
+	elseif repeatType == self.consts.REPEAT_TYPES.WEEKLY3 then
+		dateTable.day = dateTable.day + 21
+	elseif repeatType == self.consts.REPEAT_TYPES.WEEKLY4 then
+		dateTable.day = dateTable.day + 28
 	elseif repeatType == self.consts.REPEAT_TYPES.MONTHLY then
 		dateTable.month = dateTable.month + 1
 	elseif repeatType == self.consts.REPEAT_TYPES.YEARLY then

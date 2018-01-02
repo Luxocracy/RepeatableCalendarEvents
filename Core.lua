@@ -25,8 +25,11 @@ RCE.consts.EVENT_TYPES = {
 }
 RCE.consts.REPEAT_TYPES = {
 	WEEKLY = 1,
-	MONTHLY = 2,
-	YEARLY = 3,
+	WEEKLY2 = 2,
+	WEEKLY3 = 3,
+	WEEKLY4 = 4,
+	MONTHLY = 5,
+	YEARLY = 6,
 }
 RCE.consts.WAIT_FOR_PLAYER_ALIVE = 60
 RCE.consts.REPEAT_CHECK_INTERVAL = 11
@@ -108,7 +111,7 @@ function RCE:OnInitialize()
 	self.gui = LibStub("AceGUI-3.0")
 	self.timers = LibStub("AceTimer-3.0")
 
-	local defaultDb = { profile = { events = {}, eventsInFuture = 15, autoModNames = "", }}
+	local defaultDb = { profile = { events = {}, eventsInFuture = 30, autoModNames = "", }}
 	self.db = LibStub("AceDB-3.0"):New(ADDON_NAME .. "DB", defaultDb)
 	self:createOptions()
 

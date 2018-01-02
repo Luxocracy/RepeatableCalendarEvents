@@ -34,7 +34,7 @@ local function constructDefaultEvent()
 		minute = 0,
 		day = 1,
 		month = 1,
-		year = 1999,
+		year = 2018,
 		repeatType = 1,
 		locked = false,
 		guildEvent = false,
@@ -129,13 +129,16 @@ function RCE:openEventWindow(eventId)
 	year:DisableButton(true)
 
 	local repeatType = self:evtWndCreateElement(frame, "Dropdown", "EventRepeatType")
-	local repeatTypes = {
+	local repeatTypes = {	-- Can't figure out where these are stored, but they just seem to handle the name.
 		[self.consts.REPEAT_TYPES.WEEKLY] = self.l.EventRepeatWeekly,
+		[self.consts.REPEAT_TYPES.WEEKLY2] = "Bi-Weekly",	
+		[self.consts.REPEAT_TYPES.WEEKLY3] = "Tri-Weekly",
+		[self.consts.REPEAT_TYPES.WEEKLY4] = "Monthly(Weeks)",
 		[self.consts.REPEAT_TYPES.MONTHLY] = self.l.EventRepeatMonthly,
 		[self.consts.REPEAT_TYPES.YEARLY] = self.l.EventRepeatYearly,
 	}
 	repeatType:SetList(repeatTypes)
-	repeatType:SetWidth(100)
+	repeatType:SetWidth(150)
 	repeatType:SetValue(event.repeatType)
 
 	local locked = self:evtWndCreateElement(frame, "CheckBox", "EventLocked", event.locked)
