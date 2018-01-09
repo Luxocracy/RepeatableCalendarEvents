@@ -133,6 +133,7 @@ function RCE:OnInitialize()
 		RCE:scheduleRepeatCheck()
 	end)
 
+	self:updateInviteList()
 
 	self.console = LibStub("AceConsole-3.0")
 	local consoleCommandFunc = function(msg, editbox)
@@ -283,4 +284,31 @@ function RCE:normalizeDateTable(dateTable)
 	ret.min = dateTable.min
 
 	return ret
+end
+
+function RCE:updateInviteList()
+	if not IsInGuild() then
+		return false
+	end
+
+	local events = self.db.profile.events;
+	local rosterLength = GetNumGuildMembers()
+
+	RCE:RegisterEvent("GUILD_ROSTER_UPDATE", function()
+		RCE:UnregisterEvent("GUILD_ROSTER_UPDATE")
+		for key,event in pairs(events) do
+			if event.customGuildInvite then
+				local invList = {}
+				local invIndex = 1
+				for i=1,rosterLength do
+					local fullName,_,rankIndex,level = GetGuildRosterInfo(i)
+						if event.guildInvRanks and event.guildInvRanks[rankIndex+1] then
+							invList[invIndex] = fullName
+							invIndex = invIndex+1
+						end
+				end
+			end
+		end
+	end)
+	GuildRoster()
 end

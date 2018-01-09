@@ -22,6 +22,25 @@ local function builDifficultyDropdownList(cache, index)
 	return ret
 end
 
+local function buildGuildRanksDropdownList(self)
+	local ret = {}
+	local guildRanks = GuildControlGetNumRanks()
+	local rankList = {}
+
+	for i=1,guildRanks do
+		ret[i] = GuildControlGetRankName(i)
+		rankList[i] = false
+	end
+
+	self.ranks = rankList
+	return ret
+end
+
+local function closeEventWindow(frame)
+	frame:Release()
+	RCE:openEventsListWindow()
+end
+
 local function constructDefaultEvent()
 	local ret = {
 		name = "",
@@ -42,6 +61,7 @@ local function constructDefaultEvent()
 		guildInvMinLevel = 1,
 		guildInvMaxLevel = RCE.consts.CHAR_MAX_LEVEL,
 		guildInvRank = 1,
+		guildInvRanks = {},
 	}
 
 	return ret
@@ -129,11 +149,11 @@ function RCE:openEventWindow(eventId)
 	year:DisableButton(true)
 
 	local repeatType = self:evtWndCreateElement(frame, "Dropdown", "EventRepeatType")
-	local repeatTypes = {	-- Can't figure out where these are stored, but they just seem to handle the name.
+	local repeatTypes = {
 		[self.consts.REPEAT_TYPES.WEEKLY] = self.l.EventRepeatWeekly,
-		[self.consts.REPEAT_TYPES.WEEKLY2] = "Bi-Weekly",	
-		[self.consts.REPEAT_TYPES.WEEKLY3] = "Tri-Weekly",
-		[self.consts.REPEAT_TYPES.WEEKLY4] = "Monthly(Weeks)",
+		[self.consts.REPEAT_TYPES.WEEKLY2] = self.l.EventRepeatWeekly2,	
+		[self.consts.REPEAT_TYPES.WEEKLY3] = self.l.EventRepeatWeekly3,
+		[self.consts.REPEAT_TYPES.WEEKLY4] = self.l.EventRepeatWeekly4,
 		[self.consts.REPEAT_TYPES.MONTHLY] = self.l.EventRepeatMonthly,
 		[self.consts.REPEAT_TYPES.YEARLY] = self.l.EventRepeatYearly,
 	}
@@ -153,15 +173,32 @@ function RCE:openEventWindow(eventId)
 	local guildInvMaxLevel = self:evtWndCreateElement(frame, "Slider", "EventGuildInvMaxLevel", event.guildInvMaxLevel)
 	guildInvMaxLevel:SetSliderValues(1, self.consts.CHAR_MAX_LEVEL, 1)
 
-	local guildInvRank = self:evtWndCreateElement(frame, "Slider", "EventGuildInvRank", event.guildInvRank)
-	guildInvRank:SetSliderValues(1, IsInGuild() and GuildControlGetNumRanks() or 1, 1)
+	-- local guildInvRank = self:evtWndCreateElement(frame, "Slider", "EventGuildInvRank", event.guildInvRank)
+	-- guildInvRank:SetSliderValues(1, IsInGuild() and GuildControlGetNumRanks() or 1, 1)
+
+	local guildInvRanks = self:evtWndCreateElement(frame, "Dropdown", "EventGuildInvRanks")
+	local guildInvRanksList = buildGuildRanksDropdownList(guildInvRanks)
+	guildInvRanks:SetList(guildInvRanksList)
+	guildInvRanks:SetWidth(175)
+	guildInvRanks:SetMultiselect(true)
+	guildInvRanks:SetCallback("OnValueChanged", function(self, event, index, value)	
+		self.ranks[index] = value
+	end)
+	-- Restore selected values
+	for i=1,#event.guildInvRanks do
+		if event.guildInvRanks[i] then
+			guildInvRanks:SetItemValue(i, true)
+			guildInvRanks.ranks[i] = true
+		end
+	end
 
 	local saveButton = self:evtWndCreateElement(frame, "Button", "SaveEventButton")
 	saveButton:SetFullWidth(true)
 	saveButton:SetCallback("OnClick", function()
 		if RCE:evtWndSave(frame, eventId) then
-			frame:Release()
-			RCE:openEventsListWindow()
+			-- frame:Release()
+			-- RCE:openEventsListWindow()
+			saveButton:SetText("Waiting for Guild Roster Update before Saving...")
 		end
 	end)
 
@@ -248,11 +285,13 @@ function RCE:evtWndCheckFields(frame)
 	if childs.EventCustomGuildInvite:GetValue() and not childs.EventTypeGuild:GetValue() and IsInGuild() then
 		childs.EventGuildInvMinLevel:SetDisabled(false)
 		childs.EventGuildInvMaxLevel:SetDisabled(false)
-		childs.EventGuildInvRank:SetDisabled(false)
+		-- childs.EventGuildInvRank:SetDisabled(false)
+		childs.EventGuildInvRanks:SetDisabled(false)
 	else
 		childs.EventGuildInvMinLevel:SetDisabled(true)
 		childs.EventGuildInvMaxLevel:SetDisabled(true)
-		childs.EventGuildInvRank:SetDisabled(true)
+		-- childs.EventGuildInvRank:SetDisabled(true)
+		childs.EventGuildInvRanks:SetDisabled(true)
 	end
 
 	frame:DoLayout()
@@ -292,18 +331,19 @@ function RCE:evtWndSave(frame, eventId)
 	event.customGuildInvite = childs.EventCustomGuildInvite:GetValue() and true or false
 	event.guildInvMinLevel = tonumber(childs.EventGuildInvMinLevel:GetValue())
 	event.guildInvMaxLevel = tonumber(childs.EventGuildInvMaxLevel:GetValue())
-	event.guildInvRank = tonumber(childs.EventGuildInvRank:GetValue())
+	-- event.guildInvRank = tonumber(childs.EventGuildInvRank:GetValue())
+	event.guildInvRanks = childs.EventGuildInvRanks.ranks
 
 	if not self:validateEvent(event) then
 		return false
 	end
 
-	log("EvtWndSave Saving: ", eventId, event)
-	if eventId and self.db.profile.events[eventId] ~= nil then
-		self.db.profile.events[eventId] = event
-	else
-		tinsert(self.db.profile.events, event)
-	end
+	-- log("EvtWndSave Saving: ", eventId, event)
+	-- if eventId and self.db.profile.events[eventId] ~= nil then
+	-- 	self.db.profile.events[eventId] = event
+	-- else
+	-- 	tinsert(self.db.profile.events, event)
+	-- end
 
 	local sortFunc = function(evt1, evt2)
 		if evt1 == nil then
@@ -314,7 +354,52 @@ function RCE:evtWndSave(frame, eventId)
 			return strcmputf8i(tostring(evt1.name),tostring(evt2.name)) < 0
 		end
 	end
-	sort(self.db.profile.events, sortFunc)
-	self:scheduleRepeatCheck(1)
+	-- sort(self.db.profile.events, sortFunc)
+
+	if event.customGuildInvite and IsInGuild() then
+		local rosterLength = GetNumGuildMembers()
+		RCE:RegisterEvent("GUILD_ROSTER_UPDATE", function()
+			RCE:UnregisterEvent("GUILD_ROSTER_UPDATE")
+			local invList = {}
+			local invIndex = 1
+			for i=1,rosterLength do
+				local fullName,_,rankIndex,level = GetGuildRosterInfo(i)
+					if event.guildInvRanks[rankIndex+1] then 
+						invList[invIndex] = fullName
+						invIndex = invIndex+1
+					end
+			end
+			event.guildInvList = invList
+
+			log("EvtWndSave Saving: ", eventId, event)
+			if eventId and self.db.profile.events[eventId] ~= nil then
+				self.db.profile.events[eventId] = event
+			else
+				tinsert(self.db.profile.events, event)
+			end
+
+			sort(self.db.profile.events, sortFunc)
+
+			self:scheduleRepeatCheck(1)
+			closeEventWindow(frame)
+		end)
+		GuildRoster()
+	else 
+		log("EvtWndSave Saving: ", eventId, event)
+		if eventId and self.db.profile.events[eventId] ~= nil then
+			self.db.profile.events[eventId] = event
+		else
+			tinsert(self.db.profile.events, event)
+		end
+
+		sort(self.db.profile.events, sortFunc)
+
+		self:scheduleRepeatCheck(1)
+		closeEventWindow(frame)
+
+		return false
+	end
+
+	-- self:scheduleRepeatCheck(1)
 	return true
 end

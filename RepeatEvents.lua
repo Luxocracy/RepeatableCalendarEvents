@@ -30,6 +30,8 @@ local function dateTableToEvent(dateTable, event)
 end
 
 function RCE:createWoWEvent(event)
+	self.vars.creatingEvent = true
+	CalendarCloseEvent()
 	if event.guildEvent and IsInGuild() then
 		CalendarNewGuildEvent()
 	else
@@ -44,7 +46,37 @@ function RCE:createWoWEvent(event)
 		CalendarEventSetLocked()
 	end
 	if not event.guildEvent and event.customGuildInvite and IsInGuild() then
-		CalendarMassInviteGuild(event.guildInvMinLevel, event.guildInvMaxLevel, event.guildInvRank)
+		-- CalendarMassInviteGuild(event.guildInvMinLevel, event.guildInvMaxLevel, event.guildInvRank)
+		local info, button = RCE:openCGIConfirmWindow()
+		local invIndex = 1
+		RCE:RegisterEvent("CALENDAR_UPDATE_INVITE_LIST", function()
+			invIndex = invIndex+1
+			if event.guildInvList[invIndex] then
+				C_Timer.After(2, function()
+					if not RCE.vars.creatingEvent then
+						CalendarCloseEvent()
+						return
+					end
+					
+					local name = tostring(event.guildInvList[invIndex])
+					local currentText = info:GetText()
+					info:SetText(name.."\n"..currentText)
+					CalendarEventInvite(name)
+				end)
+			else
+				RCE:UnregisterEvent("CALENDAR_UPDATE_INVITE_LIST")
+				RCE:UnregisterEvent("CALENDAR_UPDATE_ERROR")
+				button:SetDisabled(false)
+				-- RCE:openConfirmWindow()
+			end
+		end)
+		RCE:RegisterEvent("CALENDAR_UPDATE_ERROR", function()
+			if event.guildInvList[invIndex] then
+				RCE:printError("Error when inviting player")
+				-- CalendarEventInvite(tostring(event.guildInvList[invIndex]))
+			end
+		end)
+		CalendarEventInvite(tostring(event.guildInvList[invIndex]))
 	end
 
 	local cache = self:getCacheForEventType(event.type)
@@ -52,10 +84,18 @@ function RCE:createWoWEvent(event)
 		local textureId = cache[event.raidOrDungeon].difficulties[event.difficulty].index
 		CalendarEventSetTextureID(textureId)
 	end
+	if not event.customGuildInvite then
+		RCE:openConfirmWindow()
+	end
 end
 
 function RCE:repeatEvent()
 	log("RepeatEvent")
+
+	if self.vars.creatingEvent then
+		-- RCE:printError("Currently creating an event, aborting")
+		return
+	end
 
 	local currentTime = time()
 	local maxCreateTime = time() + self.db.profile.eventsInFuture * 86400
@@ -93,7 +133,7 @@ function RCE:repeatEvent()
 				dateTableToEvent(dateTable, event)
 				log("RepeatEvent Create", event.name, date("%c", eventTime), event)
 				self:createWoWEvent(event)
-				self:openConfirmWindow()
+				-- self:openConfirmWindow()
 				return
 			end
 
