@@ -37,6 +37,7 @@ local function buildGuildRanksDropdownList(self)
 end
 
 local function closeEventWindow(frame)
+	RCE:UnregisterEvent("GUILD_ROSTER_UPDATE")
 	frame:Release()
 	RCE:openEventsListWindow()
 end
@@ -75,6 +76,16 @@ function RCE:openEventWindow(eventId)
 		event = constructDefaultEvent()
 	end
 	log("OpenEventWindow", eventId, event)
+
+	-- Update the guild roster, if the user is in a guild.
+	if IsInGuild() then
+		RCE.vars.rosterList = nil
+		RCE:UnregisterEvent("GUILD_ROSTER_UPDATE")	-- Clear to avoid double update?
+		RCE:RegisterEvent("GUILD_ROSTER_UPDATE", function()
+			RCE:rosterUpdate()
+		end)
+		GuildRoster()
+	end
 
 	local frame = self.gui:Create("Window")
 	frame:SetCallback("OnClose",function(widget) frame:Release() end)
@@ -357,33 +368,14 @@ function RCE:evtWndSave(frame, eventId)
 	-- sort(self.db.profile.events, sortFunc)
 
 	if event.customGuildInvite and IsInGuild() then
-		local rosterLength = GetNumGuildMembers()
-		RCE:RegisterEvent("GUILD_ROSTER_UPDATE", function()
-			RCE:UnregisterEvent("GUILD_ROSTER_UPDATE")
-			local invList = {}
-			local invIndex = 1
-			for i=1,rosterLength do
-				local fullName,_,rankIndex,level = GetGuildRosterInfo(i)
-					if event.guildInvRanks[rankIndex+1] then 
-						invList[invIndex] = fullName
-						invIndex = invIndex+1
-					end
-			end
-			event.guildInvList = invList
-
-			log("EvtWndSave Saving: ", eventId, event)
-			if eventId and self.db.profile.events[eventId] ~= nil then
-				self.db.profile.events[eventId] = event
-			else
-				tinsert(self.db.profile.events, event)
-			end
-
-			sort(self.db.profile.events, sortFunc)
-
-			self:scheduleRepeatCheck(1)
-			closeEventWindow(frame)
-		end)
-		GuildRoster()
+		if self.vars.rosterList == nil then
+			RCE:RegisterEvent("GUILD_ROSTER_UPDATE", function()
+				RCE:rosterUpdate(frame, event, eventId, sortFunc)
+			end)
+			GuildRoster()
+		else
+			RCE:rosterUpdate(frame, event, eventId, sortFunc)
+		end
 	else 
 		log("EvtWndSave Saving: ", eventId, event)
 		if eventId and self.db.profile.events[eventId] ~= nil then

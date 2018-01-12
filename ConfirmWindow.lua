@@ -28,8 +28,6 @@ function RCE:openCGIConfirmWindow()
 	local frame = self.gui:Create("Window")
 	frame:SetCallback("OnClose",function(widget)
 		RCE.vars.creatingEvent = false
-		CalendarAddEvent()
-		RCE:scheduleRepeatCheck()
 		frame:Release()
 	end)
 	frame:SetLayout("List")

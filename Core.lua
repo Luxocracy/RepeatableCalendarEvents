@@ -133,7 +133,7 @@ function RCE:OnInitialize()
 		RCE:scheduleRepeatCheck()
 	end)
 
-	self:updateInviteList()
+	self:updateGuildRoster()
 
 	self.console = LibStub("AceConsole-3.0")
 	local consoleCommandFunc = function(msg, editbox)
@@ -286,29 +286,58 @@ function RCE:normalizeDateTable(dateTable)
 	return ret
 end
 
-function RCE:updateInviteList()
+function RCE:rosterUpdate(frame, event, eventId, sortFunc)
+	RCE:UnregisterEvent("GUILD_ROSTER_UPDATE")
+	-- print("Updating Roster...")
+	local fullName,rankIndex,level
+	local rosterList = {}
+	local rosterLength = GetNumGuildMembers()
+	local invList = {}
+	local invIndex = 1
+	for i=1,rosterLength do
+		if event ~= nil and RCE.vars.rosterList ~= nil then
+			fullName = RCE.vars.rosterList[i].fullName
+			rankIndex = RCE.vars.rosterList[i].rankIndex
+			level = RCE.vars.rosterList[i].level
+		else
+			fullName,_,rankIndex,level = GetGuildRosterInfo(i)
+		end
+		if event == nil then
+			rosterList[i] = {}
+			rosterList[i].fullName = fullName
+			rosterList[i].rankIndex = rankIndex
+			rosterList[i].level = level
+		elseif event.guildInvRanks[rankIndex+1] then 
+			invList[invIndex] = fullName
+			invIndex = invIndex+1
+		end
+	end
+	if event ~= nil then
+		event.guildInvList = invList
+
+		log("EvtWndSave Saving: ", eventId, event)
+		if eventId and RCE.db.profile.events[eventId] ~= nil then
+			RCE.db.profile.events[eventId] = event
+		else
+			tinsert(RCE.db.profile.events, event)
+		end
+
+		sort(RCE.db.profile.events, sortFunc)
+
+		RCE:scheduleRepeatCheck(1)
+		closeEventWindow(frame)
+	else
+		RCE.vars.rosterList = rosterList
+	end
+end
+
+function RCE:updateGuildRoster()
 	if not IsInGuild() then
 		return false
 	end
 
-	local events = self.db.profile.events;
-	local rosterLength = GetNumGuildMembers()
-
 	RCE:RegisterEvent("GUILD_ROSTER_UPDATE", function()
-		RCE:UnregisterEvent("GUILD_ROSTER_UPDATE")
-		for key,event in pairs(events) do
-			if event.customGuildInvite then
-				local invList = {}
-				local invIndex = 1
-				for i=1,rosterLength do
-					local fullName,_,rankIndex,level = GetGuildRosterInfo(i)
-						if event.guildInvRanks and event.guildInvRanks[rankIndex+1] then
-							invList[invIndex] = fullName
-							invIndex = invIndex+1
-						end
-				end
-			end
-		end
+		RCE:rosterUpdate()
 	end)
 	GuildRoster()
 end
