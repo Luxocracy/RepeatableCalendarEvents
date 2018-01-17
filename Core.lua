@@ -325,7 +325,11 @@ function RCE:rosterUpdate(frame, event, eventId, sortFunc)
 		sort(RCE.db.profile.events, sortFunc)
 
 		RCE:scheduleRepeatCheck(1)
-		closeEventWindow(frame)
+
+	-- Same as 'closeEventWindow' function, in EventWindow
+		RCE:UnregisterEvent("GUILD_ROSTER_UPDATE")
+		frame:Release()
+		RCE:openEventsListWindow()
 	else
 		RCE.vars.rosterList = rosterList
 	end

@@ -60,6 +60,11 @@ function RCE:createWoWEvent(event)
 					
 					local name = tostring(event.guildInvList[invIndex])
 					local currentText = info:GetText()
+
+					if invIndex == 2 then
+						currentText = tostring(event.guildInvList[1])
+					end
+
 					info:SetText(name.."\n"..currentText)
 					CalendarEventInvite(name)
 				end)

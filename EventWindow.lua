@@ -196,10 +196,12 @@ function RCE:openEventWindow(eventId)
 		self.ranks[index] = value
 	end)
 	-- Restore selected values
-	for i=1,#event.guildInvRanks do
-		if event.guildInvRanks[i] then
-			guildInvRanks:SetItemValue(i, true)
-			guildInvRanks.ranks[i] = true
+	if event.guildInvRanks then
+		for i=1,#event.guildInvRanks do
+			if event.guildInvRanks[i] then
+				guildInvRanks:SetItemValue(i, true)
+				guildInvRanks.ranks[i] = true
+			end
 		end
 	end
 
@@ -373,6 +375,7 @@ function RCE:evtWndSave(frame, eventId)
 				RCE:rosterUpdate(frame, event, eventId, sortFunc)
 			end)
 			GuildRoster()
+			return true
 		else
 			RCE:rosterUpdate(frame, event, eventId, sortFunc)
 		end
@@ -388,10 +391,8 @@ function RCE:evtWndSave(frame, eventId)
 
 		self:scheduleRepeatCheck(1)
 		closeEventWindow(frame)
-
-		return false
 	end
 
 	-- self:scheduleRepeatCheck(1)
-	return true
+	return false
 end
